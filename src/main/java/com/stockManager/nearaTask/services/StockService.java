@@ -5,6 +5,8 @@ import com.stockManager.nearaTask.model.Stock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+
 @Service
 public class StockService {
     @Autowired
@@ -25,5 +27,9 @@ public class StockService {
 
     public Stock getStock(String stockSym){
         return stockDao.getStock(stockSym);
+    }
+
+    public HashMap<String,Stock> getAllStock(){
+        return stockDao.getAllStock();
     }
 }

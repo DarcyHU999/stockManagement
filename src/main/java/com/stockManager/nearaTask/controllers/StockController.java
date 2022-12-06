@@ -12,6 +12,9 @@ import yahoofinance.YahooFinance;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/stock")
@@ -87,6 +90,25 @@ public class StockController {
             return new Result(Code.SAVE_ERR,balanceService.query().toString(),"IO Exception");
         }
         return new Result(Code.SAVE_OK,balanceService.query().toString(), "successfully sell");
+    }
+
+    @CrossOrigin(origins ="http://localhost:3000")
+    @GetMapping("/stockHold")
+    public Result stockHold() {
+        HashMap<String,Stock> stockHold = stockService.getAllStock();
+        ArrayList<String> lst = new ArrayList<>();
+        for(String sym: stockHold.keySet()){
+            Stock e = stockHold.get(sym);
+            String stockStr = "{" +
+                    "sym:" + "\'" + e.getSym() +"\'" + "," +
+                    "count:" + "\'" + e.getCount() +"\'" + "," +
+                    "avg:" + "\'" + e.getAvgPrice() +"\'" +
+                    "}";
+            lst.add(stockStr);
+        }
+        String returnStr = Arrays.toString(lst.toArray());
+        System.out.println(returnStr);
+        return new Result(Code.GET_OK,returnStr,"successfully get all stocks");
     }
 
 

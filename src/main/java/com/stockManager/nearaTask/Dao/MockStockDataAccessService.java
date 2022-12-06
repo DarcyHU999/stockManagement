@@ -28,4 +28,8 @@ public class MockStockDataAccessService implements StockDao {
         return dBForStock.get(stockSym);
     }
 
+    @Override
+    public HashMap<String,Stock> getAllStock(){
+        return dBForStock;
+    }
 }

@@ -20,6 +20,7 @@ const Home = () => {
     const [buySym,setBuySym]=useState("-");
     const [sellCount,setSellCount]=useState(1);
     const [sellSym,setSellSym]=useState("-");
+    const [stockHold,setStockHold]=useState([]);
     const columns = [
         {
             title: 'Sym',
@@ -65,6 +66,22 @@ const Home = () => {
     ];
     const onStockHold = (pagination, sorter, extra) => {
         console.log('params', pagination, sorter, extra);
+        // let url = 'http://localhost:8080/stock/stockhold';
+        // axios.get(url)
+        //     .then(function (response) {
+        //         let data=response.data.data;
+        //         if(data !== "-1"){
+        //             console.log(data);
+        //             setStockHold(data);
+        //             console.log(stockHold);
+        //
+        //         }else{
+        //             console.log("fuck");
+        //         }
+        //     })
+        //     .catch(function (error) {
+        //         console.log(error);
+        //     });
     };
 
     useEffect(()=>{
@@ -186,8 +203,6 @@ const Home = () => {
             });
     };
 
-
-
     return (
         <div>
             <div>
@@ -242,7 +257,7 @@ const Home = () => {
                     <Col span={8}></Col>
                 </Row>
             </div>
-            <div style = {{height:"10px"}}></div>
+            <div style = {{height:"20px"}}></div>
             <div>
                 <Row>
                     <Col span ={8}></Col>
@@ -259,7 +274,7 @@ const Home = () => {
                     <Col span ={8}></Col>
                 </Row>
             </div>
-            <div style = {{height:"10px"}}></div>
+            <div style = {{height:"20px"}}></div>
             <div>
                 <Row>
                     <Col span = {6}></Col>
@@ -280,7 +295,7 @@ const Home = () => {
                     </Col>
                 </Row>
             </div>
-            <div style = {{height:"10px"}}></div>
+            <div style = {{height:"20px"}}></div>
             <div>
                 <Row>
                     <Col span = {6}></Col>
@@ -302,8 +317,15 @@ const Home = () => {
                     </Col>
                 </Row>
             </div>
+            <div style = {{height:"20px"}}></div>
             <div>
-                <Table columns={columns} dataSource={data} onChange={onStockHold} />;
+                <Row>
+                    <Col span={8}></Col>
+                    <Col span={8}>
+                        <Table columns={columns} dataSource={data} onChange={onStockHold} />
+                    </Col>
+                    <Col span={8}></Col>
+                </Row>
             </div>
 
         </div>
