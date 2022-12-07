@@ -1,5 +1,5 @@
 import React, {useState,useEffect} from 'react';
-import {Col, Row, Form, Switch, Button, Descriptions, Table,} from 'antd';
+import {Col, Row, Button, Descriptions, Table,} from 'antd';
 import { Statistic } from 'antd';
 import { Typography } from 'antd';
 import { AudioOutlined } from '@ant-design/icons';
@@ -25,63 +25,42 @@ const Home = () => {
         {
             title: 'Sym',
             dataIndex: 'sym',
-            sorter: (a, b) => a.name.length - b.name.length,
-            sortDirections: ['descend'],
+            sorter: (a, b) => a.sym.length - b.sym.length,
+            sortDirections: ['descend','ascend'],
         },
         {
             title: 'Count',
             dataIndex: 'count',
-            defaultSortOrder: 'descend',
             sorter: (a, b) => a.count - b.count,
+            sortDirections: ['descend','ascend'],
         },
         {
             title: 'Avg',
             dataIndex: 'avg',
-            defaultSortOrder: 'descend',
             sorter: (a, b) => a.avg - b.avg,
+            sortDirections: ['descend','ascend'],
         },
     ];
 
-    const data = [
-        {
-            sym: 'STM',
-            count: 32,
-            avg: 20,
-        },
-        {
-            sym: 'GOOG',
-            count: 32,
-            avg: 53,
-        },
-        {
-            sym: 'BOB',
-            count: 32,
-            avg: 24,
-        },
-        {
-            sym: 'JOT',
-            count: 34,
-            avg: 23,
-        },
-    ];
     const onStockHold = (pagination, sorter, extra) => {
         console.log('params', pagination, sorter, extra);
-        // let url = 'http://localhost:8080/stock/stockhold';
-        // axios.get(url)
-        //     .then(function (response) {
-        //         let data=response.data.data;
-        //         if(data !== "-1"){
-        //             console.log(data);
-        //             setStockHold(data);
-        //             console.log(stockHold);
-        //
-        //         }else{
-        //             console.log("fuck");
-        //         }
-        //     })
-        //     .catch(function (error) {
-        //         console.log(error);
-        //     });
+        let url = 'http://localhost:8080/stock/stockhold';
+        axios.get(url)
+            .then(function (response) {
+
+                if(response.data.data !== "-1"){
+                    console.log("-----");
+                    console.log(response.data);
+                    setStockHold(JSON.parse(response.data.data));
+
+
+                }else{
+                    console.log("fuck");
+                }
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
     };
 
     useEffect(()=>{
@@ -100,6 +79,7 @@ const Home = () => {
             .catch(function (error) {
                 console.log(error);
             });
+        onStockHold();
     },[])
 
     const onBuyCount = (value) => {
@@ -126,15 +106,21 @@ const Home = () => {
         let bodyFormData = new FormData();
         bodyFormData.append('sym','' + sellSym);
         bodyFormData.append('amount','' + sellCount);
-        let url = 'http://localhost:8080/stock/buy';
+        let url = 'http://localhost:8080/stock/sell';
         axios.post(url,bodyFormData)
             .then(function (response) {
                 console.log(response.data.data);
-                setBalance(response.data.data);
+                if(response.data.data === "-1"){
+                    alert(response.data.msg);
+                }else {
+                    setBalance(response.data.data);
+                    onStockHold();
+                }
             })
             .catch(function (error) {
                 console.log(error);
             });
+
     };
 
     const onBuy = () => {
@@ -146,11 +132,18 @@ const Home = () => {
         axios.post(url,bodyFormData)
             .then(function (response) {
                 console.log(response.data.data);
-                setBalance(response.data.data);
+                if(response.data.data === "-1"){
+                    alert(response.data.msg);
+                }
+                else {
+                    setBalance(response.data.data);
+                    onStockHold();
+                }
             })
             .catch(function (error) {
                 console.log(error);
             });
+
 
     };
 
@@ -190,17 +183,21 @@ const Home = () => {
 
     const onWithdraw = (value) => {
         console.log(value);
-        let bodyFormData = new FormData();
-        bodyFormData.append('cash',value);
-        let url = 'http://localhost:8080/balance/withdraw';
-        axios.post(url, bodyFormData)
-            .then(function (response) {
-                console.log(response.data.data);
-                setBalance(response.data.data);
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
+        if(balance < value){
+            alert("You do not have enough money")
+        }else {
+            let bodyFormData = new FormData();
+            bodyFormData.append('cash', value);
+            let url = 'http://localhost:8080/balance/withdraw';
+            axios.post(url, bodyFormData)
+                .then(function (response) {
+                    console.log(response.data.data);
+                    setBalance(response.data.data);
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        }
     };
 
     return (
@@ -222,23 +219,28 @@ const Home = () => {
             <div>
                 <Row>
                     <Col span = {8}></Col>
-                    <Col span = {4}>
+                    <Col span = {8}>
                         <Space>
                             <Search
                                 placeholder="amounts of cash"
-                                enterButton="Deposit"
+                                enterButton="+"
                                 size="large"
                                 onSearch={onDeposit}
-                                // onChange={}
                             />
                         </Space>
                     </Col>
-
-                    <Col span ={4}>
+                    <Col span = {8}></Col>
+                </Row>
+            </div>
+            <div style = {{height:"10px"}}></div>
+            <div>
+                <Row>
+                    <Col span = {8}></Col>
+                    <Col span ={8}>
                         <Space>
                             <Search
                                 placeholder="amounts of cash"
-                                enterButton="Withdraw"
+                                enterButton="-"
                                 size="large"
                                 onSearch={onWithdraw}
                             />
@@ -278,20 +280,18 @@ const Home = () => {
             <div>
                 <Row>
                     <Col span = {6}></Col>
-                    <Col span = {6}>
+                    <Col span = {12}>
                         <Space>
                             <Input placeholder="input stock sym to buy" size="large" onChange={onBuySym}/>
                         </Space>
-                    </Col>
-                    <Col span = {6}>
                         <Space>
                             <InputNumber size="large" min={1} max={100000} defaultValue={1} onChange={onBuyCount} />
                         </Space>
-                    </Col>
-                    <Col span = {6}>
                         <Button type="primary" size={"large"} onClick={onBuy}>
                             Buy
                         </Button>
+                    </Col>
+                    <Col span = {6}>
                     </Col>
                 </Row>
             </div>
@@ -299,21 +299,20 @@ const Home = () => {
             <div>
                 <Row>
                     <Col span = {6}></Col>
-                    <Col span = {6}>
+                    <Col span = {12}>
                         <Space>
                             <Input placeholder="input stock sym to sell" size="large" onChange={onSellSym}/>
                         </Space>
-
-                    </Col>
-                    <Col span = {6}>
                         <Space>
                             <InputNumber size="large" min={1} max={100000} defaultValue={1} onChange={onSellCount} />
                         </Space>
-                    </Col>
-                    <Col span = {6}>
                         <Button type="primary" size={"large"} onClick={onSell}>
                             Sell
                         </Button>
+
+                    </Col>
+                    <Col span = {6}>
+
                     </Col>
                 </Row>
             </div>
@@ -322,11 +321,12 @@ const Home = () => {
                 <Row>
                     <Col span={8}></Col>
                     <Col span={8}>
-                        <Table columns={columns} dataSource={data} onChange={onStockHold} />
+                        <Table columns={columns} dataSource={stockHold} onChange={onStockHold} />
                     </Col>
                     <Col span={8}></Col>
                 </Row>
             </div>
+
 
         </div>
     );

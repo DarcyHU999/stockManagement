@@ -50,17 +50,21 @@ public class StockController {
             yahoofinance.Stock stockQuery = YahooFinance.get(sym);
             price = stockQuery.getQuote().getPrice();
             BigDecimal amount = new BigDecimal(amountStr);
-            balanceService.withdraw(amount.multiply(price));
+
             Stock stockFind = stockService.getStock(sym);
             if(stockFind == null){
                 stockService.insertStock(sym,new Stock(sym,price,amount));
             }else{
+                if(balanceService.query().compareTo(price.multiply(amount)) == -1){
+                    return new Result(Code.SAVE_ERR,"-1","you do not have enough money");
+                }
                 BigDecimal totalPrice = stockFind.getAvgPrice().multiply(stockFind.getCount()).add(price.multiply(amount));
                 BigDecimal avgPrice = totalPrice.divide(amount.add(stockFind.getCount()));
                 stockFind.setCount(amount.add(stockFind.getCount()));
                 stockFind.setAvgPrice(avgPrice);
                 stockService.insertStock(sym,stockFind);
             }
+            balanceService.withdraw(amount.multiply(price));
         }catch (IOException e){
             return new Result(Code.SAVE_ERR,balanceService.query().toString(),"IO Exception");
         }
@@ -75,17 +79,27 @@ public class StockController {
             yahoofinance.Stock stockQuery = YahooFinance.get(sym);
             price = stockQuery.getQuote().getPrice();
             BigDecimal amount = new BigDecimal(amountStr);
-            balanceService.deposit(amount.multiply(price));
             Stock stockFind = stockService.getStock(sym);
             if(stockFind == null){
                 return new Result(Code.SAVE_ERR,balanceService.query().toString(),"you do not have this stock");
             }else{
+                if(amount.compareTo(stockFind.getCount()) == 1){
+                    return new Result(Code.SAVE_ERR,"-1","you do not have enough stocks");
+                }
                 BigDecimal totalPrice = stockFind.getAvgPrice().multiply(stockFind.getCount()).subtract(price.multiply(amount));
-                BigDecimal avgPrice = totalPrice.divide(amount.subtract(stockFind.getCount()));
-                stockFind.setCount(amount.add(stockFind.getCount()));
-                stockFind.setAvgPrice(avgPrice);
-                stockService.insertStock(sym,stockFind);
+                BigDecimal avgPrice;
+                if(stockFind.getCount().subtract(amount).equals(new BigDecimal("0"))){
+                    stockService.removeStock(stockFind.getSym(),stockFind);
+                }
+                else {
+                    avgPrice = totalPrice.divide(stockFind.getCount().subtract(amount));
+                    stockFind.setCount(stockFind.getCount().subtract(amount));
+                    stockFind.setAvgPrice(avgPrice);
+                    stockService.insertStock(sym,stockFind);
+                }
+
             }
+            balanceService.deposit(amount.multiply(price));
         }catch (IOException e){
             return new Result(Code.SAVE_ERR,balanceService.query().toString(),"IO Exception");
         }
@@ -93,18 +107,21 @@ public class StockController {
     }
 
     @CrossOrigin(origins ="http://localhost:3000")
-    @GetMapping("/stockHold")
+    @GetMapping("/stockhold")
     public Result stockHold() {
         HashMap<String,Stock> stockHold = stockService.getAllStock();
         ArrayList<String> lst = new ArrayList<>();
+        int key = 1;
         for(String sym: stockHold.keySet()){
             Stock e = stockHold.get(sym);
             String stockStr = "{" +
-                    "sym:" + "\'" + e.getSym() +"\'" + "," +
-                    "count:" + "\'" + e.getCount() +"\'" + "," +
-                    "avg:" + "\'" + e.getAvgPrice() +"\'" +
+                    "\"key\":" + "\"" + key + "\"" + "," +
+                    "\"sym\":" + "\"" + e.getSym() +"\"" + "," +
+                    "\"count\":" + "\"" + e.getCount() +"\"" + "," +
+                    "\"avg\":" + "\"" + e.getAvgPrice() +"\"" +
                     "}";
             lst.add(stockStr);
+            key++;
         }
         String returnStr = Arrays.toString(lst.toArray());
         System.out.println(returnStr);
